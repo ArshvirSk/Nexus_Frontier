@@ -1,7 +1,7 @@
 import { AgentManagement } from "@/components/game/AgentManagement";
 import { DiplomacyInterface } from "@/components/game/DiplomacyInterface";
+import { HowToPlay } from "@/components/game/HowToPlay";
 import { Marketplace } from "@/components/game/Marketplace";
-import { SyndicateGame } from "@/components/game/SyndicateGame";
 import { TerritoryMap } from "@/components/game/TerritoryMap";
 import { FontProvider } from "@/components/providers/FontProvider";
 import { WalletProvider } from "@/components/providers/WalletProvider";
@@ -49,6 +49,7 @@ function App() {
                     <TabsTrigger value="agents">Agents</TabsTrigger>
                     <TabsTrigger value="market">Market</TabsTrigger>
                     <TabsTrigger value="diplomacy">Diplomacy</TabsTrigger>
+                    <TabsTrigger value="howtoplay">How to Play</TabsTrigger>
                   </TabsList>
 
                   <TabsContent value="territory" className="space-y-4">
@@ -65,6 +66,10 @@ function App() {
 
                   <TabsContent value="diplomacy">
                     <DiplomacyInterface />
+                  </TabsContent>
+                  
+                  <TabsContent value="howtoplay">
+                    <HowToPlay />
                   </TabsContent>
                 </Tabs>
               </main>

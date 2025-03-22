@@ -4,8 +4,17 @@ import * as Dialog from "@radix-ui/react-dialog";
 
 export function WrongNetworkAlert() {
   const { network, connected } = useWallet();
+  
+  // Debug logging
+  console.log("Current network:", network?.name?.toLowerCase());
+  console.log("Expected network:", NETWORK.toLowerCase());
+  console.log("Connected:", connected);
 
-  return !connected || network?.name === NETWORK ? (
+  // Check if the network matches (case-insensitive)
+  const isCorrectNetwork = network?.name?.toLowerCase().includes(NETWORK.toLowerCase());
+  console.log("Network match:", isCorrectNetwork);
+
+  return !connected || isCorrectNetwork ? (
     <></>
   ) : (
     <Dialog.Root open={true}>

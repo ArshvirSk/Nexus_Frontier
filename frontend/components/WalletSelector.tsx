@@ -2,8 +2,8 @@ import {
   APTOS_CONNECT_ACCOUNT_URL,
   AboutAptosConnect,
   AboutAptosConnectEducationScreen,
-  AdapterWallet,
   AdapterNotDetectedWallet,
+  AdapterWallet,
   AptosPrivacyPolicy,
   WalletItem,
   groupAndSortWallets,
@@ -86,7 +86,7 @@ interface ConnectWalletDialogProps {
 }
 
 function ConnectWalletDialog({ close }: ConnectWalletDialogProps) {
-  const { wallets = [] } = useWallet();
+  const { wallets } = useWallet();
   const { aptosConnectWallets, availableWallets, installableWallets } = groupAndSortWallets(wallets);
 
   const hasAptosConnectWallets = !!aptosConnectWallets.length;

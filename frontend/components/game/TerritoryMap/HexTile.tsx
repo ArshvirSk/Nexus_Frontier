@@ -1,5 +1,5 @@
 import { Territory } from "../../../types/game";
-import { memo, useMemo } from "react";
+import { memo, useMemo, useState } from "react";
 
 interface HexTileProps {
   x: number;
@@ -20,6 +20,8 @@ export const HexTile = memo(function HexTile({
   isOwned,
   onClick,
 }: HexTileProps) {
+  const [isHovered, setIsHovered] = useState(false);
+  
   // Calculate hex points
   const points = useMemo(() => {
     const vertices = [
@@ -45,17 +47,29 @@ export const HexTile = memo(function HexTile({
     };
   }, [territory.resources]);
 
-  // Visual states
+  // Visual states based on selection, ownership, and hover
+  const scale = isHovered ? 1.05 : isSelected ? 1.03 : 1;
   const baseColor = isOwned ? "var(--neon-purple)" : dominantResource ? getResourceColor(dominantResource) : "var(--neon-blue)";
-  const strokeWidth = isSelected ? 3 : 1.5;
-  const glowIntensity = isSelected ? 5 : isOwned ? 3 : 2;
+  const strokeWidth = isSelected ? 3 : isHovered ? 2 : 1.5;
+  const glowIntensity = isSelected ? 5 : isHovered ? 4 : isOwned ? 3 : 2;
+  const opacity = isHovered || isSelected ? 1 : 0.9;
 
   // Resource-based patterns
   const patternId = `pattern-${territory.id}`;
   const gridSize = size * 0.2;
+  
+  // Alliance ownership indicator
+  const allianceColor = isOwned ? "var(--neon-purple)" : territory.owner ? "var(--neon-red)" : "transparent";
+  const allianceOpacity = territory.owner ? 0.3 : 0;
 
   return (
-    <g onClick={onClick} className="cursor-pointer transition-all duration-200">
+    <g 
+      onClick={onClick} 
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className="cursor-pointer transition-transform duration-200 ease-in-out"
+      style={{ transform: `scale(${scale})` }}
+    >
       <defs>
         <pattern
           id={patternId}
@@ -74,14 +88,38 @@ export const HexTile = memo(function HexTile({
             opacity="0.2"
           />
         </pattern>
+        
+        {/* Radial gradient for resource glow */}
+        <radialGradient id={`glow-${territory.id}`} cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+          <stop offset="0%" stopColor={baseColor} stopOpacity="0.3" />
+          <stop offset="100%" stopColor={baseColor} stopOpacity="0" />
+        </radialGradient>
       </defs>
 
-      {/* Resource glow */}
+      {/* Glow effect */}
+      {(isHovered || isSelected) && (
+        <polygon
+          points={points}
+          fill={`url(#glow-${territory.id})`}
+          stroke="none"
+          opacity={0.6}
+        />
+      )}
+
+      {/* Alliance ownership background */}
+      <polygon
+        points={points}
+        fill={allianceColor}
+        stroke="none"
+        opacity={allianceOpacity}
+      />
+      
+      {/* Resource pattern */}
       <polygon
         points={points}
         fill={`url(#${patternId})`}
         stroke="none"
-        opacity={resourceIntensity}
+        opacity={resourceIntensity * opacity}
       />
       
       {/* Main hex */}
@@ -97,12 +135,25 @@ export const HexTile = memo(function HexTile({
         } as any}
       />
 
+      {/* Territory name (only show on hover or selected) */}
+      {(isHovered || isSelected) && (
+        <text
+          x={x}
+          y={y - size * 0.5}
+          textAnchor="middle"
+          className="font-cyber fill-current text-xs pointer-events-none"
+          style={{ fill: "white" }}
+        >
+          {territory.name}
+        </text>
+      )}
+
       {/* Level indicator */}
       <text
         x={x}
         y={y - size * 0.2}
         textAnchor="middle"
-        className="font-cyber fill-current text-xs"
+        className="font-cyber fill-current text-xs pointer-events-none"
         style={{ fill: baseColor }}
       >
         Lvl {territory.level}
@@ -113,36 +164,80 @@ export const HexTile = memo(function HexTile({
         x={x}
         y={y}
         textAnchor="middle"
-        className="font-cyber fill-current text-xs"
+        className="font-cyber fill-current text-xs pointer-events-none"
         style={{ fill: baseColor }}
       >
         Def {territory.defense}
       </text>
 
-      {/* Resource indicators */}
+      {/* Resource indicators - Enhanced with mini bars */}
       <g transform={`translate(${x - size * 0.4}, ${y + size * 0.4})`}>
-        {Object.entries(territory.resources).map(([type, data], index) => (
-          <g key={type} transform={`translate(${index * (size * 0.25)}, 0)`}>
-            <rect
-              x={0}
-              y={0}
-              width={size * 0.2}
-              height={size * 0.1}
-              fill={getResourceColor(type)}
-              opacity={0.3}
-            />
-            <text
-              x={size * 0.1}
-              y={size * 0.08}
-              textAnchor="middle"
-              className="font-cyber fill-current text-[8px]"
-              style={{ fill: getResourceColor(type) }}
-            >
-              {data.production}
-            </text>
-          </g>
-        ))}
+        {Object.entries(territory.resources).map(([type, data], index) => {
+          const resourceColor = getResourceColor(type);
+          const barWidth = Math.max((data.production / 15) * size * 0.2, size * 0.05);
+          
+          return (
+            <g key={type} transform={`translate(${index * (size * 0.25)}, 0)`}>
+              {/* Bar background */}
+              <rect
+                x={0}
+                y={0}
+                width={size * 0.2}
+                height={size * 0.1}
+                rx={2}
+                fill={resourceColor}
+                opacity={0.15}
+              />
+              
+              {/* Production bar */}
+              <rect
+                x={0}
+                y={0}
+                width={barWidth}
+                height={size * 0.1}
+                rx={2}
+                fill={resourceColor}
+                opacity={0.6}
+              />
+              
+              {/* Production value */}
+              <text
+                x={size * 0.1}
+                y={size * 0.08}
+                textAnchor="middle"
+                className="font-cyber fill-current text-[8px] pointer-events-none"
+                style={{ fill: resourceColor }}
+              >
+                {data.production}
+              </text>
+            </g>
+          );
+        })}
       </g>
+      
+      {/* Tooltip on hover */}
+      {isHovered && !isSelected && (
+        <foreignObject
+          x={x + size * 0.8}
+          y={y - size * 0.5}
+          width={size * 3}
+          height={size * 2}
+          className="pointer-events-none"
+        >
+          <div className="bg-black/80 text-white text-xs p-2 rounded border border-purple-500/30 backdrop-blur-sm">
+            <div className="font-bold text-purple-300">{territory.name}</div>
+            <div className="text-gray-300 text-[10px] mt-1">{territory.description}</div>
+            <div className="mt-1 grid grid-cols-2 gap-x-3 gap-y-1">
+              {Object.entries(territory.resources).map(([type, data]) => (
+                <div key={type} className="flex justify-between">
+                  <span className="capitalize" style={{ color: getResourceColor(type) }}>{type}:</span>
+                  <span>+{data.production}/h</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </foreignObject>
+      )}
     </g>
   );
 });
@@ -154,10 +249,10 @@ function getResourceColor(type: string | null): string {
     case "data":
       return "var(--neon-blue)";
     case "materials":
-      return "var(--neon-purple)";
+      return "var(--neon-amber)";
     case "influence":
-      return "var(--neon-red)";
+      return "var(--neon-purple)";
     default:
-      return "white";
+      return "var(--neon-gray)";
   }
 }
