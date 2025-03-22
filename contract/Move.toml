@@ -1,0 +1,12 @@
+[package]
+name = "NexusSyndicates"
+version = "1.0.0"
+authors = []
+
+[addresses]
+syndicate_addr = "0x39dfca60b8674cf48ea4bb01bbaeab449332b7ef250dc0ab88c1a64c37f1b3f4"
+
+[dependencies]
+AptosFramework = { git = "https://github.com/aptos-labs/aptos-core.git", rev = "mainnet", subdir = "aptos-move/framework/aptos-framework" }
+
+[dev-dependencies]
